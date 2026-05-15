@@ -1,9 +1,12 @@
 import { computed, reactive } from "vue";
 import type { Project } from "../types/project";
 
+export type WindowKind = "project" | "pdf" | "contact";
+
 export type OpenWindow = {
   id: string;
-  project: Project;
+  kind: WindowKind;
+  project?: Project;
   x: number;
   y: number;
   z: number;
@@ -16,8 +19,8 @@ let zSeed = 50;
 export function useWindowManager() {
   const state = reactive<{ windows: OpenWindow[] }>({ windows: [] });
 
-  const openProject = (project: Project) => {
-    const existing = state.windows.find((w) => w.id === project.id);
+  const open = (kind: WindowKind, id: string, project?: Project) => {
+    const existing = state.windows.find((w) => w.id === id);
     if (existing) {
       existing.z = ++zSeed;
       existing.minimized = false;
@@ -26,7 +29,8 @@ export function useWindowManager() {
 
     const offset = 26 * state.windows.length;
     state.windows.push({
-      id: project.id,
+      id,
+      kind,
       project,
       x: 80 + offset,
       y: 70 + offset,
@@ -36,10 +40,13 @@ export function useWindowManager() {
     });
   };
 
+  const openProject = (project: Project) => open("project", project.id, project);
+  const openPdf = () => open("pdf", "cv-pdf");
+  const openContact = () => open("contact", "contact-cmd");
+
   const focus = (id: string) => {
     const w = state.windows.find((x) => x.id === id);
-    if (!w) return;
-    w.z = ++zSeed;
+    if (w) w.z = ++zSeed;
   };
 
   const close = (id: string) => {
@@ -48,18 +55,27 @@ export function useWindowManager() {
 
   const minimize = (id: string) => {
     const w = state.windows.find((x) => x.id === id);
-    if (!w) return;
-    w.minimized = true;
+    if (w) w.minimized = true;
   };
 
   const maximize = (id: string) => {
     const w = state.windows.find((x) => x.id === id);
-    if (!w) return;
-    w.maximized = !w.maximized;
-    w.z = ++zSeed;
+    if (w) {
+      w.maximized = !w.maximized;
+      w.z = ++zSeed;
+    }
   };
 
-  const sorted = computed(() => [...state.windows].sort((a, b) => a.z - b.z));
+  const windows = computed(() => [...state.windows].sort((a, b) => a.z - b.z));
 
-  return { windows: sorted, openProject, focus, close, minimize, maximize };
+  return {
+    windows,
+    openProject,
+    openPdf,
+    openContact,
+    focus,
+    close,
+    minimize,
+    maximize
+  };
 }

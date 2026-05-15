@@ -2,6 +2,9 @@
 import { computed, onMounted, ref } from "vue";
 import gsap from "gsap";
 import type { OpenWindow } from "../composables/useWindowManager";
+import { useI18n } from "../composables/useI18n";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   model: OpenWindow;
@@ -101,15 +104,53 @@ const closeAnimated = () => {
     :style="style"
     @pointerdown="emit('focus')"
   >
-    <header class="titlebar" @pointerdown="onDownBar" @pointermove="onMoveBar" @pointerup="onUpBar" @pointercancel="onUpBar">
-      <div class="traffic">
-        <button class="dot red" type="button" aria-label="Close" @pointerdown.stop @click="closeAnimated"></button>
-        <button class="dot yellow" type="button" aria-label="Minimize" @pointerdown.stop @click="emit('minimize')"></button>
-        <button class="dot green" type="button" aria-label="Maximize" @pointerdown.stop @click="emit('maximize')"></button>
-      </div>
-      <div class="title">{{ model.project.title }}</div>
-      <div class="spacer"></div>
-    </header>
+        <header
+  class="titlebar"
+  @pointerdown="onDownBar"
+  @pointermove="onMoveBar"
+  @pointerup="onUpBar"
+  @pointercancel="onUpBar"
+>
+  <div class="traffic">
+    <button
+      class="dot red"
+      type="button"
+      :aria-label="t.window.close"
+      @pointerdown.stop
+      @click="closeAnimated"
+    ></button>
+
+    <button
+      class="dot yellow"
+      type="button"
+      aria-label="Minimize"
+      @pointerdown.stop
+      @click="emit('minimize')"
+    ></button>
+
+    <button
+      class="dot green"
+      type="button"
+      aria-label="Maximize"
+      @pointerdown.stop
+      @click="emit('maximize')"
+    ></button>
+  </div>
+
+  <div class="title">
+    {{ model.project!.title }}
+  </div>
+
+  <button
+    class="iconBtn"
+    type="button"
+    :aria-label="t.window.close"
+    @pointerdown.stop
+    @click="closeAnimated"
+  >
+    ✕
+  </button>
+</header>
 
     <div class="content">
       <div class="hero" v-if="model.project.previewImageUrl">

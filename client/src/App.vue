@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import IntroScene from "./components/IntroScene.vue";
 import DesktopOS from "./components/DesktopOS.vue";
 import ParallaxMonitorDive from "./components/ParallaxMonitorDive.vue";
 
