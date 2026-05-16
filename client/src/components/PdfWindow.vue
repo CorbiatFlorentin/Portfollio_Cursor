@@ -11,18 +11,33 @@ const props = defineProps<{
   maximized: boolean;
 }>();
 
-const emit = defineEmits<{ (e: "close"): void; (e: "focus"): void }>();
+const emit = defineEmits<{
+  (e: "close"): void;
+  (e: "focus"): void;
+  (e: "maximize"): void;
+}>();
 
 const { t } = useI18n();
+
 const root = ref<HTMLElement | null>(null);
-const cvUrl = "/cv.pdf";
+
+const cvUrl = "/CorbiatF_CV.pdf";
 
 onMounted(() => {
   if (!root.value) return;
+
   gsap.fromTo(
     root.value,
-    { opacity: 0, scale: 0.985 },
-    { opacity: 1, scale: 1, duration: 0.45, ease: "power3.out" }
+    {
+      opacity: 0,
+      scale: 0.985
+    },
+    {
+      opacity: 1,
+      scale: 1,
+      duration: 0.45,
+      ease: "power3.out"
+    }
   );
 });
 
@@ -31,6 +46,7 @@ const closeAnimated = () => {
     emit("close");
     return;
   }
+
   gsap.to(root.value, {
     opacity: 0,
     scale: 0.985,
@@ -48,26 +64,75 @@ const closeAnimated = () => {
     :class="{ minimized, maximized }"
     :style="{
       zIndex: z,
-      transform: maximized ? 'none' : `translate3d(${x}px, ${y}px, 0)`,
+      transform: maximized
+        ? 'translate3d(0,0,0)'
+        : `translate3d(${x}px, ${y}px, 0)`,
+
       left: maximized ? '18px' : '0',
       top: maximized ? '18px' : '0',
       right: maximized ? '18px' : 'auto',
       bottom: maximized ? '18px' : 'auto',
-      width: maximized ? 'auto' : 'min(920px, calc(100vw - 36px))',
-      height: maximized ? 'auto' : 'min(760px, calc(100vh - 36px))'
+
+      width: maximized
+        ? 'calc(100vw - 36px)'
+        : 'min(1100px, calc(100vw - 36px))',
+
+      height: maximized
+        ? 'calc(100vh - 36px)'
+        : 'min(900px, calc(100vh - 36px))'
     }"
     @pointerdown="emit('focus')"
   >
     <header class="bar">
-      <span class="title">{{ t.pdf.title }}</span>
-      <button type="button" class="x" :aria-label="t.window.close" @click="closeAnimated">✕</button>
+      <span class="title">
+        {{ t.pdf.title }}
+      </span>
+
+      <div class="controls">
+        <button
+          type="button"
+          class="x"
+          @click="emit('maximize')"
+        >
+          ⛶
+        </button>
+
+        <button
+          type="button"
+          class="x"
+          :aria-label="t.window.close"
+          @click="closeAnimated"
+        >
+          ✕
+        </button>
+      </div>
     </header>
 
-    <iframe class="frame" :src="cvUrl" :title="t.pdf.title"></iframe>
+    <object
+      class="frame"
+      :data="cvUrl"
+      type="application/pdf"
+    >
+      <p>Impossible d'afficher le PDF.</p>
+    </object>
 
     <footer class="actions">
-      <a class="btn" :href="cvUrl" target="_blank" rel="noreferrer">{{ t.desktop.openTab }}</a>
-      <a class="btn primary" :href="cvUrl" download>{{ t.desktop.downloadCv }}</a>
+      <a
+        class="btn"
+        :href="cvUrl"
+        target="_blank"
+        rel="noreferrer"
+      >
+        {{ t.desktop.openTab }}
+      </a>
+
+      <a
+        class="btn primary"
+        :href="cvUrl"
+        download
+      >
+        {{ t.desktop.downloadCv }}
+      </a>
     </footer>
   </section>
 </template>
@@ -75,13 +140,22 @@ const closeAnimated = () => {
 <style scoped>
 .win {
   position: fixed;
+
+  /* IMPORTANT */
+  isolation: isolate;
+
   display: grid;
   grid-template-rows: 44px 1fr auto;
+
   border-radius: 16px;
   overflow: hidden;
+
   border: 1px solid rgba(255, 255, 255, 0.12);
+
   background: rgba(10, 12, 18, 0.72);
+
   backdrop-filter: blur(18px);
+
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.65);
 }
 
@@ -94,9 +168,16 @@ const closeAnimated = () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   padding: 0 12px;
+
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.03)
+  );
 }
 
 .title {
@@ -104,23 +185,42 @@ const closeAnimated = () => {
   color: rgba(255, 255, 255, 0.75);
 }
 
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .x {
   width: 34px;
   height: 30px;
+
   border-radius: 10px;
+
   border: 1px solid rgba(255, 255, 255, 0.1);
+
   background: rgba(255, 255, 255, 0.06);
-  color: #fff;
+
+  color: white;
+
   cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
 }
 
 .x:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
+  transform: scale(1.04);
 }
 
 .frame {
   width: 100%;
+  height: 100%;
+
   border: 0;
+
   background: #111;
 }
 
@@ -128,21 +228,40 @@ const closeAnimated = () => {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+
   padding: 12px;
+
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .btn {
   padding: 10px 14px;
+
   border-radius: 10px;
+
   text-decoration: none;
+
   color: rgba(255, 255, 255, 0.88);
+
   border: 1px solid rgba(255, 255, 255, 0.14);
+
   font-size: 13px;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.btn:hover {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .btn.primary {
   border-color: rgba(120, 200, 255, 0.35);
   background: rgba(120, 200, 255, 0.12);
+}
+
+.btn.primary:hover {
+  background: rgba(120, 200, 255, 0.18);
 }
 </style>
