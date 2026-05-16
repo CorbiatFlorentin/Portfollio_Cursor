@@ -1,8 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import type { ProjectDto } from "./types.js";
-import { projects } from "./data/projects.js";
+import { getProjects } from "./routes/projects.js";
 import { postContact } from "./routes/contact.js";
 
 const app = express();
@@ -13,10 +12,7 @@ app.get("/api/health", (_req, res) => {
   res.json({ ok: true });
 });
 
-app.get("/api/projects", (_req, res) => {
-  const payload: ProjectDto[] = projects;
-  res.json(payload);
-});
+app.get("/api/projects", getProjects);
 
 app.post("/api/contact", postContact);
 

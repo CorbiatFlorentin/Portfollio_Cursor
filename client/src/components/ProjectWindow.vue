@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from "vue";
 import gsap from "gsap";
 import type { OpenWindow } from "../composables/useWindowManager";
+import type { Project } from "../types/project";
 import { useI18n } from "../composables/useI18n";
 
 const { t } = useI18n();
@@ -16,6 +17,11 @@ const emit = defineEmits<{
   (e: "maximize"): void;
   (e: "focus"): void;
 }>();
+
+const project = computed((): Project | undefined => {
+  if (props.model.kind !== "project") return undefined;
+  return props.model.project;
+});
 
 const root = ref<HTMLElement | null>(null);
 
@@ -98,74 +104,79 @@ const closeAnimated = () => {
 
 <template>
   <section
+    v-if="project"
     ref="root"
     class="win"
     :class="{ minimized: model.minimized, maximized: model.maximized }"
     :style="style"
     @pointerdown="emit('focus')"
   >
-        <header
-  class="titlebar"
-  @pointerdown="onDownBar"
-  @pointermove="onMoveBar"
-  @pointerup="onUpBar"
-  @pointercancel="onUpBar"
->
-  <div class="traffic">
-    <button
-      class="dot red"
-      type="button"
-      :aria-label="t.window.close"
-      @pointerdown.stop
-      @click="closeAnimated"
-    ></button>
+    <header
+      class="titlebar"
+      @pointerdown="onDownBar"
+      @pointermove="onMoveBar"
+      @pointerup="onUpBar"
+      @pointercancel="onUpBar"
+    >
+      <div class="traffic">
+        <button
+          class="dot red"
+          type="button"
+          :aria-label="t.window.close"
+          @pointerdown.stop
+          @click="closeAnimated"
+        ></button>
+        <button
+          class="dot yellow"
+          type="button"
+          aria-label="Minimize"
+          @pointerdown.stop
+          @click="emit('minimize')"
+        ></button>
+        <button
+          class="dot green"
+          type="button"
+          aria-label="Maximize"
+          @pointerdown.stop
+          @click="emit('maximize')"
+        ></button>
+      </div>
 
-    <button
-      class="dot yellow"
-      type="button"
-      aria-label="Minimize"
-      @pointerdown.stop
-      @click="emit('minimize')"
-    ></button>
+      <motion class="title">{{ project.title }}</motion>
 
-    <button
-      class="dot green"
-      type="button"
-      aria-label="Maximize"
-      @pointerdown.stop
-      @click="emit('maximize')"
-    ></button>
-  </div>
-
-  <div class="title">
-    {{ model.project!.title }}
-  </div>
-
-  <button
-    class="iconBtn"
-    type="button"
-    :aria-label="t.window.close"
-    @pointerdown.stop
-    @click="closeAnimated"
-  >
-    ✕
-  </button>
-</header>
+      <button
+        class="iconBtn"
+        type="button"
+        :aria-label="t.window.close"
+        @pointerdown.stop
+        @click="closeAnimated"
+      >
+        ✕
+      </button>
+    </header>
 
     <div class="content">
-      <div class="hero" v-if="model.project.previewImageUrl">
-        <img :src="model.project.previewImageUrl" :alt="`${model.project.title} preview`" loading="lazy" />
+      <div v-if="project.previewImageUrl" class="hero">
+        <img
+          :src="project.previewImageUrl"
+          :alt="`${project.title} preview`"
+          loading="lazy"
+        />
         <div class="reflection"></div>
       </div>
 
       <div class="copy">
-        <p class="desc">{{ model.project.description }}</p>
+        <p class="desc">{{ project.description }}</p>
 
         <div class="pills">
-          <span class="pill" v-for="t in model.project.technologies" :key="t">{{ t }}</span>
+          <span v-for="tech in project.technologies" :key="tech" class="pill">{{ tech }}</span>
         </div>
 
-        <a class="cta" :href="model.project.liveUrl" target="_blank" rel="noreferrer">Open live site</a>
+        <div class="actions">
+          <a class="cta" :href="project.liveUrl" target="_blank" rel="noreferrer">
+            {{ t.desktop.openLive }}
+          </a>
+        </div>
       </div>
     </div>
   </section>
@@ -219,9 +230,11 @@ const closeAnimated = () => {
 .red {
   background: #ff5f57;
 }
+
 .yellow {
   background: #febc2e;
 }
+
 .green {
   background: #28c840;
 }
@@ -235,8 +248,18 @@ const closeAnimated = () => {
   text-overflow: ellipsis;
 }
 
-.spacer {
-  width: 52px;
+.iconBtn {
+  width: 34px;
+  height: 30px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  cursor: pointer;
+}
+
+.iconBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .content {
@@ -285,6 +308,12 @@ const closeAnimated = () => {
   padding: 16px 16px 18px;
 }
 
+.meta {
+  margin: 0 0 10px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 13px;
+}
+
 .desc {
   margin: 0 0 12px;
   color: rgba(255, 255, 255, 0.78);
@@ -307,6 +336,12 @@ const closeAnimated = () => {
   color: rgba(255, 255, 255, 0.78);
 }
 
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .cta {
   display: inline-flex;
   align-items: center;
@@ -318,6 +353,13 @@ const closeAnimated = () => {
   border: 1px solid rgba(120, 200, 255, 0.35);
   background: radial-gradient(circle at 20% 20%, rgba(120, 200, 255, 0.25), rgba(255, 255, 255, 0.04));
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 13px;
+}
+
+.cta.secondary {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 @media (prefers-reduced-motion: reduce) {
