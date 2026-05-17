@@ -27,26 +27,42 @@ const { locale, switchLocale } = useI18n();
 <style scoped>
 .switcher {
   position: fixed;
+
   top: 14px;
   right: 14px;
-  z-index: 200;
+
+  /* FIX */
+  z-index: 5;
+
   display: flex;
   gap: 6px;
+
   padding: 6px;
+
   border-radius: 12px;
+
   border: 1px solid rgba(255, 255, 255, 0.12);
+
   background: rgba(10, 12, 18, 0.6);
+
   backdrop-filter: blur(14px);
 }
 
 button {
   border: 0;
+
   padding: 6px 10px;
+
   border-radius: 8px;
+
   cursor: pointer;
+
   color: rgba(255, 255, 255, 0.65);
+
   background: transparent;
+
   font-size: 12px;
+
   transition: all 0.2s ease;
 }
 

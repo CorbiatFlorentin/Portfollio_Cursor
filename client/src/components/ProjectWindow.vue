@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import gsap from "gsap";
 import type { OpenWindow } from "../composables/useWindowManager";
 import type { Project } from "../types/project";
@@ -23,9 +23,26 @@ const project = computed((): Project | undefined => {
   return props.model.project;
 });
 
-const root = ref<HTMLElement | null>(null);
+const previewBroken = ref(false);
 
+watch(
+  () => project.value?.previewImageUrl,
+  () => {
+    previewBroken.value = false;
+  }
+);
+
+const showPreviewImage = computed(() => {
+  return !!project.value?.previewImageUrl && !previewBroken.value;
+});
+
+const onPreviewError = () => {
+  previewBroken.value = true;
+};
+
+const root = ref<HTMLElement | null>(null);
 const dragging = ref(false);
+
 let dragStartX = 0;
 let dragStartY = 0;
 let winStartX = 0;
@@ -40,36 +57,42 @@ const style = computed(() => {
       bottom: "18px",
       width: "auto",
       height: "auto",
-      transform: "none"
+      transform: "none",
+      zIndex: props.model.z
     } as const;
   }
 
   return {
-    left: "0px",
-    top: "0px",
-    width: "min(980px, calc(100vw - 36px))",
+    left: "0",
+    top: "0",
+    width: "min(900px, calc(100vw - 36px))",
     height: "min(640px, calc(100vh - 36px))",
-    transform: `translate3d(${props.model.x}px, ${props.model.y}px, 0)`
+    transform: `translate3d(${props.model.x}px, ${props.model.y}px, 0)`,
+    zIndex: props.model.z
   } as const;
 });
 
 const onDownBar = (e: PointerEvent) => {
   if (props.model.maximized) return;
+
   dragging.value = true;
+
   (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+
   dragStartX = e.clientX;
   dragStartY = e.clientY;
+
   winStartX = props.model.x;
   winStartY = props.model.y;
+
   emit("focus");
 };
 
 const onMoveBar = (e: PointerEvent) => {
   if (!dragging.value || props.model.maximized) return;
-  const dx = e.clientX - dragStartX;
-  const dy = e.clientY - dragStartY;
-  props.model.x = winStartX + dx;
-  props.model.y = winStartY + dy;
+
+  props.model.x = winStartX + (e.clientX - dragStartX);
+  props.model.y = winStartY + (e.clientY - dragStartY);
 };
 
 const onUpBar = () => {
@@ -77,26 +100,22 @@ const onUpBar = () => {
 };
 
 onMounted(() => {
-  const el = root.value;
-  if (!el) return;
+  if (!root.value) return;
+
   gsap.fromTo(
-    el,
-    { opacity: 0, scale: 0.985, filter: "blur(6px)" },
-    { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.55, ease: "power3.out" }
+    root.value,
+    { opacity: 0, scale: 0.985 },
+    { opacity: 1, scale: 1, duration: 0.45, ease: "power3.out" }
   );
 });
 
 const closeAnimated = () => {
-  const el = root.value;
-  if (!el) {
-    emit("close");
-    return;
-  }
-  gsap.to(el, {
+  if (!root.value) return emit("close");
+
+  gsap.to(root.value, {
     opacity: 0,
     scale: 0.985,
-    duration: 0.35,
-    ease: "power2.in",
+    duration: 0.3,
     onComplete: () => emit("close")
   });
 };
@@ -112,71 +131,118 @@ const closeAnimated = () => {
     @pointerdown="emit('focus')"
   >
     <header
-      class="titlebar"
+      class="bar"
       @pointerdown="onDownBar"
       @pointermove="onMoveBar"
       @pointerup="onUpBar"
       @pointercancel="onUpBar"
     >
-      <div class="traffic">
+      <span class="title">{{ project.title }}</span>
+
+      <div class="controls">
         <button
-          class="dot red"
           type="button"
-          :aria-label="t.window.close"
-          @pointerdown.stop
-          @click="closeAnimated"
-        ></button>
-        <button
-          class="dot yellow"
-          type="button"
-          aria-label="Minimize"
+          class="btn98"
           @pointerdown.stop
           @click="emit('minimize')"
-        ></button>
+        >
+          _
+        </button>
+
         <button
-          class="dot green"
           type="button"
-          aria-label="Maximize"
+          class="btn98"
           @pointerdown.stop
           @click="emit('maximize')"
-        ></button>
+        >
+          □
+        </button>
+
+        <button
+          type="button"
+          class="btn98"
+          @pointerdown.stop
+          @click="closeAnimated"
+        >
+          ✕
+        </button>
       </div>
-
-      <motion class="title">{{ project.title }}</motion>
-
-      <button
-        class="iconBtn"
-        type="button"
-        :aria-label="t.window.close"
-        @pointerdown.stop
-        @click="closeAnimated"
-      >
-        ✕
-      </button>
     </header>
 
-    <div class="content">
-      <div v-if="project.previewImageUrl" class="hero">
+    <div class="body">
+      <div class="hero">
         <img
+          v-if="showPreviewImage"
           :src="project.previewImageUrl"
           :alt="`${project.title} preview`"
           loading="lazy"
+          referrerpolicy="no-referrer"
+          @error="onPreviewError"
         />
-        <div class="reflection"></div>
+
+        <div v-else class="preview404" role="status">
+          <div class="browserBar">
+            <span class="browserIcon">🌐</span>
+
+            <span class="browserUrl">
+              {{ project.liveUrl }}
+            </span>
+          </div>
+
+          <div class="errorBox">
+            <div class="errorIcon">X</div>
+
+            <div class="errorText">
+              <h2>{{ t.preview.notFoundTitle }}</h2>
+
+              <p>{{ t.preview.notFoundLine1 }}</p>
+
+              <p class="muted">
+                {{ t.preview.notFoundLine2 }}
+              </p>
+
+              <a
+                class="tryLink"
+                :href="project.liveUrl"
+                target="_blank"
+                rel="noreferrer"
+              >
+                {{ t.preview.tryLive }}
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="copy">
-        <p class="desc">{{ project.description }}</p>
+      <div class="pills">
+        <span
+          v-for="tech in project.technologies"
+          :key="tech"
+          class="pill"
+        >
+          {{ tech }}
+        </span>
+      </div>
 
-        <div class="pills">
-          <span v-for="tech in project.technologies" :key="tech" class="pill">{{ tech }}</span>
-        </div>
+      <div class="actions">
+        <a
+          class="btn primary"
+          :href="project.liveUrl"
+          target="_blank"
+          rel="noreferrer"
+        >
+          {{ t.desktop.openLive }}
+        </a>
 
-        <div class="actions">
-          <a class="cta" :href="project.liveUrl" target="_blank" rel="noreferrer">
-            {{ t.desktop.openLive }}
-          </a>
-        </div>
+        <a
+          v-if="project.githubUrl"
+          class="btn"
+          :href="project.githubUrl"
+          target="_blank"
+          rel="noreferrer"
+        >
+          GitHub
+        </a>
       </div>
     </div>
   </section>
@@ -185,186 +251,215 @@ const closeAnimated = () => {
 <style scoped>
 .win {
   position: fixed;
-  z-index: 10;
-  border-radius: 16px;
+  display: grid;
+  grid-template-rows: 28px 1fr;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(10, 12, 18, 0.62);
-  backdrop-filter: blur(18px) saturate(140%);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  border-top: 2px solid #fff;
+  border-left: 2px solid #fff;
+  border-right: 2px solid #404040;
+  border-bottom: 2px solid #404040;
+  background: #c0c0c0;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.6);
+  font-family: Tahoma, "MS Sans Serif", sans-serif;
 }
 
 .win.minimized {
   opacity: 0;
   pointer-events: none;
-  transform: translate3d(0, 120vh, 0) scale(0.98);
 }
 
-.titlebar {
-  height: 44px;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 10px;
-  padding: 0 12px;
-  cursor: default;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.traffic {
+.bar {
   display: flex;
-  gap: 8px;
   align-items: center;
-}
-
-.dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(0, 0, 0, 0.35);
-  padding: 0;
-  cursor: pointer;
-}
-
-.red {
-  background: #ff5f57;
-}
-
-.yellow {
-  background: #febc2e;
-}
-
-.green {
-  background: #28c840;
+  justify-content: space-between;
+  padding: 0 4px;
+  background: linear-gradient(90deg, #000080, #1084d0);
+  color: #fff;
+  cursor: default;
+  user-select: none;
 }
 
 .title {
-  text-align: center;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  font-weight: bold;
+  text-shadow: 1px 1px 0 #000;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.iconBtn {
-  width: 34px;
-  height: 30px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff;
+.controls {
+  display: flex;
+  gap: 2px;
+}
+
+.btn98 {
+  width: 16px;
+  height: 14px;
+  padding: 0;
+  line-height: 12px;
+  font-size: 10px;
+  font-weight: bold;
+  color: #000;
+  background: #c0c0c0;
+  border-top: 2px solid #fff;
+  border-left: 2px solid #fff;
+  border-right: 2px solid #404040;
+  border-bottom: 2px solid #404040;
   cursor: pointer;
 }
 
-.iconBtn:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.content {
-  display: grid;
-  grid-template-rows: 1fr auto;
-  height: calc(100% - 44px);
+.body {
+  padding: 12px;
+  overflow: auto;
+  background: #c0c0c0;
 }
 
 .hero {
-  position: relative;
-  min-height: 240px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 10px;
+  border: 2px inset #c0c0c0;
+  overflow: hidden;
+  min-height: 200px;
+  max-height: 240px;
+  background: #fff;
 }
 
 .hero img {
   width: 100%;
-  height: 100%;
+  height: 220px;
   object-fit: cover;
   display: block;
-  filter: saturate(1.05) contrast(1.05);
 }
 
-.reflection {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.18), transparent 62%);
-  opacity: 0.35;
-  mix-blend-mode: screen;
-  transform: translateX(-30%);
-  animation: sweep 6.5s ease-in-out infinite;
+.preview404 {
+  height: 220px;
+  display: grid;
+  grid-template-rows: 24px 1fr;
+  background: #c0c0c0;
+  font-family: Tahoma, "MS Sans Serif", sans-serif;
 }
 
-@keyframes sweep {
-  0% {
-    transform: translateX(-35%);
-  }
-  50% {
-    transform: translateX(35%);
-  }
-  100% {
-    transform: translateX(-35%);
-  }
+.browserBar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 6px;
+  background: #ece9d8;
+  border-bottom: 1px solid #808080;
+  font-size: 11px;
 }
 
-.copy {
-  padding: 16px 16px 18px;
+.browserIcon {
+  font-size: 12px;
+}
+
+.browserUrl {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #000080;
+}
+
+.errorBox {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: #fff;
+  margin: 8px;
+  border: 2px inset #c0c0c0;
+}
+
+.errorIcon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+  font-weight: bold;
+  color: #c00;
+  border: 2px solid #c0c0c0;
+  background: #fff;
+}
+
+.errorText h2 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: #000080;
+}
+
+.errorText p {
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: #000;
+  line-height: 1.4;
+}
+
+.errorText .muted {
+  color: #444;
+}
+
+.tryLink {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #000080;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .meta {
-  margin: 0 0 10px;
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 13px;
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #222;
 }
 
 .desc {
-  margin: 0 0 12px;
-  color: rgba(255, 255, 255, 0.78);
-  line-height: 1.55;
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #111;
 }
 
 .pills {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 14px;
+  gap: 6px;
+  margin-bottom: 12px;
 }
 
 .pill {
-  font-size: 12px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.78);
+  font-size: 11px;
+  padding: 4px 8px;
+  background: #d4d0c8;
+  border-top: 2px solid #fff;
+  border-left: 2px solid #fff;
+  border-right: 2px solid #404040;
+  border-bottom: 2px solid #404040;
 }
 
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
-.cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border-radius: 12px;
+.btn {
+  padding: 6px 12px;
   text-decoration: none;
-  border: 1px solid rgba(120, 200, 255, 0.35);
-  background: radial-gradient(circle at 20% 20%, rgba(120, 200, 255, 0.25), rgba(255, 255, 255, 0.04));
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
-  color: rgba(255, 255, 255, 0.92);
-  font-size: 13px;
+  color: #000;
+  font-size: 12px;
+  font-weight: bold;
+  background: #c0c0c0;
+  border-top: 2px solid #fff;
+  border-left: 2px solid #fff;
+  border-right: 2px solid #404040;
+  border-bottom: 2px solid #404040;
 }
 
-.cta.secondary {
-  border-color: rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.05);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .reflection {
-    animation: none;
-  }
+.btn.primary {
+  background: #d4d0c8;
 }
 </style>

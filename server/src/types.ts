@@ -5,4 +5,6 @@ export type ProjectDto = {
   technologies: string[];
   liveUrl: string;
   previewImageUrl?: string;
+  githubUrl?: string;
+  stars?: number;
 };

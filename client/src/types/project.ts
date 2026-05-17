@@ -5,4 +5,5 @@ export type Project = {
   technologies: string[];
   liveUrl: string;
   previewImageUrl?: string;
+  githubUrl?: string;
 };

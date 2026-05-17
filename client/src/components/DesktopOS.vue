@@ -142,24 +142,12 @@ onMounted(async () => {
 .wallpaper {
   position: absolute;
   inset: -3%;
-  background:
-    radial-gradient(
-      1200px 700px at 30% 20%,
-      rgba(120, 200, 255, 0.18),
-      transparent 60%
-    ),
-    radial-gradient(
-      900px 600px at 70% 60%,
-      rgba(190, 120, 255, 0.14),
-      transparent 55%
-    ),
-    linear-gradient(
-      180deg,
-      #070814,
-      #05060a 55%,
-      #04050a
-    );
-
+  background-color: #008080;
+  background-image: url("/windows98-flag.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  image-rendering: auto;
   will-change: transform;
 }
 
@@ -186,8 +174,8 @@ onMounted(async () => {
 .p {
   position: absolute;
 
-  left: calc(5% + (var(--i) * 37px) % 90%);
-  top: calc(10% + (var(--i) * 53px) % 80%);
+  left: calc(5% + 37px * var(--i));
+  top: calc(10% + 53px * var(--i));
 
   width: 2px;
   height: 2px;

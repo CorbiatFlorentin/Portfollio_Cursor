@@ -30,20 +30,41 @@ const tick = () => {
   const { nx, ny } = pointer.value;
 
   const cam = root.value?.querySelector(".cam") as HTMLElement | null;
-  const screen = root.value?.querySelector(".screenInner") as HTMLElement | null;
+  const screen = root.value?.querySelector(
+    ".screenInner"
+  ) as HTMLElement | null;
+
   const glare = root.value?.querySelector(".glare") as HTMLElement | null;
 
+  const desk = root.value?.querySelector(".desk") as HTMLElement | null;
+
+  const cup = root.value?.querySelector(".cup") as HTMLElement | null;
+
   if (cam) {
-    cam.style.transform = `translate3d(${nx * 10}px, ${ny * 8}px, 0) scale(0.96)`;
+    cam.style.transform =
+      `translateX(-50%) translate3d(${nx * 10}px, ${ny * 8}px, 0) scale(0.96)`;
   }
 
   if (screen) {
-    screen.style.transform = `translate3d(${nx * 6}px, ${ny * 5}px, 0)`;
+    screen.style.transform =
+      `translate3d(${nx * 6}px, ${ny * 5}px, 0)`;
   }
 
   if (glare) {
     glare.style.opacity = "0.24";
-    glare.style.transform = `translate3d(${nx * 18}px, ${ny * 12}px, 0)`;
+
+    glare.style.transform =
+      `translate3d(${nx * 18}px, ${ny * 12}px, 0)`;
+  }
+
+  if (desk) {
+    desk.style.transform =
+      `translate3d(${nx * 8}px, ${ny * 6}px, 0)`;
+  }
+
+  if (cup) {
+    cup.style.transform =
+      `translate3d(${nx * 12}px, ${ny * 8}px, 0)`;
   }
 
   raf = requestAnimationFrame(tick);
@@ -56,6 +77,7 @@ const enterDesktop = () => {
   running = false;
 
   const cam = root.value?.querySelector(".cam") as HTMLElement | null;
+
   const wrap = root.value;
 
   gsap
@@ -105,28 +127,40 @@ onUnmounted(() => {
     </aside>
 
     <div class="scene">
-      <div class="cam">
-        <div class="bezel">
-          <button
-            class="screen"
-            type="button"
-            :disabled="diving"
-            @click="enterDesktop"
-            :aria-label="t.intro.cta"
-          >
-            <div class="screenInner">
-              <div class="screenBg"></div>
+      <div class="stage">
+        <div class="desk" aria-hidden="true"></div>
 
-              <div class="glare"></div>
+        <div class="cam">
+          <div class="bezel">
+            <button
+              class="screen"
+              type="button"
+              :disabled="diving"
+              @click="enterDesktop"
+              :aria-label="t.intro.cta"
+            >
+              <div class="screenInner">
+                <div class="screenBg"></div>
 
-              <span class="hint">
-                {{ diving ? t.intro.powering : t.intro.cta }}
-              </span>
-            </div>
-          </button>
+                <div class="glare"></div>
+
+                <span class="hint">
+                  {{ diving ? t.intro.powering : t.intro.cta }}
+                </span>
+              </div>
+            </button>
+          </div>
+
+          <div class="stand"></div>
         </div>
 
-        <div class="stand"></div>
+        <div class="cup" aria-hidden="true">
+          <div class="steam" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -185,12 +219,46 @@ h1 {
 
 .scene {
   height: 100%;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 5vh;
+  position: relative;
+}
+
+/* One box: desk + monitor + cup share the same coordinates */
+.stage {
+  position: relative;
+  width: min(1100px, 94vw);
+  height: min(480px, 52vh);
+}
+
+.desk {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 42%;
+  border-radius: 18px;
+  background:
+    radial-gradient(
+      900px 220px at 50% 0%,
+      rgba(255, 220, 170, 0.22),
+      transparent 60%
+    ),
+    linear-gradient(90deg, #4a2f1a, #7a4e2b, #5b3a20);
+  box-shadow: 0 40px 90px rgba(0, 0, 0, 0.75);
+  z-index: 1;
+  will-change: transform;
 }
 
 .cam {
-  width: min(920px, 92vw);
+  position: absolute;
+  left: 50%;
+  bottom: 34%;
+  width: 92%;
+  z-index: 3;
+  transform: translateX(-50%);
   transform-style: preserve-3d;
   will-change: transform;
 }
@@ -203,7 +271,9 @@ h1 {
     rgba(255, 255, 255, 0.1),
     rgba(0, 0, 0, 0.55)
   );
+
   border: 1px solid rgba(255, 255, 255, 0.1);
+
   box-shadow: 0 50px 140px rgba(0, 0, 0, 0.75);
 }
 
@@ -239,18 +309,11 @@ h1 {
 .screenBg {
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(
-      800px 420px at 25% 20%,
-      rgba(120, 200, 255, 0.35),
-      transparent 60%
-    ),
-    radial-gradient(
-      700px 420px at 75% 60%,
-      rgba(190, 120, 255, 0.22),
-      transparent 55%
-    ),
-    linear-gradient(180deg, #070814, #05060a);
+  background-color: #008080;
+  background-image: url("/windows98-flag.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .glare {
@@ -262,6 +325,7 @@ h1 {
     rgba(255, 255, 255, 0.2),
     transparent 58%
   );
+
   mix-blend-mode: screen;
   pointer-events: none;
 }
@@ -286,13 +350,100 @@ h1 {
     rgba(255, 255, 255, 0.1),
     rgba(0, 0, 0, 0.55)
   );
+
   border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cup {
+  position: absolute;
+  left: 10%;
+  bottom: 38%;
+  width: 56px;
+  height: 46px;
+  z-index: 4;
+  border-radius: 10px 10px 14px 14px;
+
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.2),
+    rgba(200, 200, 200, 0.08)
+  );
+
+  border: 1px solid rgba(255, 255, 255, 0.2);
+
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
+
+  will-change: transform;
+}
+
+/* optional: saucer under cup */
+.cup::after {
+  content: "";
+  position: absolute;
+  left: -8px;
+  bottom: -6px;
+  width: 72px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.steam {
+  position: absolute;
+  left: 18px;
+  top: -34px;
+  width: 30px;
+  height: 40px;
+}
+
+.steam span {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.18);
+  animation: steam 2.8s ease-in-out infinite;
+}
+
+.steam span:nth-child(1) {
+  left: 2px;
+  animation-delay: 0s;
+}
+
+.steam span:nth-child(2) {
+  left: 12px;
+  opacity: 0.75;
+  animation-delay: 0.35s;
+}
+
+.steam span:nth-child(3) {
+  left: 20px;
+  opacity: 0.55;
+  animation-delay: 0.7s;
+}
+
+@keyframes steam {
+  0% {
+    transform: translateY(10px) scale(0.85);
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 0.55;
+  }
+
+  100% {
+    transform: translateY(-34px) scale(1.25);
+    opacity: 0;
+  }
 }
 
 .vignette {
   position: absolute;
   inset: 0;
   pointer-events: none;
+
   background: radial-gradient(
     circle at 50% 45%,
     transparent 40%,
