@@ -5,7 +5,15 @@ import { getProjects } from "./routes/projects.js";
 import { postContact } from "./routes/contact.js";
 
 const app = express();
-app.use(cors({ origin: true }));
+app.use(
+  cors({
+    origin: [
+      "https://portfollio-corbiat-florentin.vercel.app"
+    ],
+    methods: ["GET", "POST"],
+    credentials: true
+  })
+);
 app.use(express.json());
 
 app.get("/api/health", (_req, res) => {
