@@ -5,3 +5,20 @@ export async function fetchProjects(): Promise<Project[]> {
   if (!res.ok) throw new Error(`Failed to load projects (${res.status})`);
   return (await res.json()) as Project[];
 }
+
+const API_URL =
+  (import.meta as ImportMeta & {
+    env: {
+      VITE_API_URL: string;
+    };
+  }).env.VITE_API_URL;
+
+export async function getProjects() {
+  const response = await fetch(`${API_URL}/api/projects`);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch projects");
+  }
+
+  return response.json();
+}
