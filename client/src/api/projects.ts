@@ -1,11 +1,5 @@
 import type { Project } from "../types/project";
 
-export async function fetchProjects(): Promise<Project[]> {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/projects`);
-  if (!res.ok) throw new Error(`Failed to load projects (${res.status})`);
-  return (await res.json()) as Project[];
-}
-
 const API_URL =
   (import.meta as ImportMeta & {
     env: {
@@ -13,12 +7,12 @@ const API_URL =
     };
   }).env.VITE_API_URL;
 
-export async function getProjects() {
-  const response = await fetch(`${API_URL}/api/projects`);
+export async function fetchProjects(): Promise<Project[]> {
+  const res = await fetch(`${API_URL}/projects`);
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch projects");
+  if (!res.ok) {
+    throw new Error(`Failed to load projects (${res.status})`);
   }
 
-  return response.json();
+  return (await res.json()) as Project[];
 }
