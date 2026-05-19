@@ -12,7 +12,8 @@
     "dotenv": "^17.4.2",
     "express": "^4.21.2",
     "gsap": "^3.15.0",
-    "nodemailer": "^8.0.7"
+    "nodemailer": "^8.0.7",
+    "resend": "^6.12.3"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

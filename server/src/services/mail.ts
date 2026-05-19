@@ -1,4 +1,6 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 function required(name: string): string {
   const value = process.env[name];
@@ -15,25 +17,7 @@ export async function sendContactEmail(input: {
   email: string;
   message: string;
 }) {
-
-  const host = process.env.SMTP_HOST || "smtp.mail.yahoo.com";
-  const port = Number(process.env.SMTP_PORT || 465);
-  const secure = process.env.SMTP_SECURE !== "false";
-
-  const user = required("SMTP_USER");
-  const pass = required("SMTP_PASS");
-
-  const to = process.env.CONTACT_TO || user;
-
-  const transporter = nodemailer.createTransport({
-    host,
-    port,
-    secure,
-    auth: {
-      user,
-      pass
-    }
-  });
+  const to = required("CONTACT_TO");
 
   const cleanName = input.name.trim();
 
@@ -75,10 +59,15 @@ export async function sendContactEmail(input: {
     </div>
   `;
 
-  await transporter.sendMail({
-    from: `"Portfolio Contact" <${user}>`,
+  const response = await resend.emails.send({
+    from: "Portfolio <onboarding@resend.dev>",
     to,
+    replyTo: cleanEmail,
     subject,
-    html
+    html,
   });
+
+  console.log("[RESEND RESPONSE]", response);
+
+  return response;
 }
