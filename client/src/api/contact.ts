@@ -4,13 +4,15 @@ export type ContactPayload = {
   message: string;
 };
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export async function sendContact(
   payload: ContactPayload
 ): Promise<void> {
 
   console.log("[CONTACT PAYLOAD]", payload);
 
-  const res = await fetch("/api/contact", {
+  const res = await fetch(`${API_URL}/api/contact`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
