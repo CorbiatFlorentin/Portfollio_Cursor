@@ -2,14 +2,15 @@ export type Locale = "en" | "fr";
 
 export const messages = {
   en: {
-    intro: {
-      title: "Futuristic developer workstation",
-      subtitle: "Click the monitor screen to enter the portfolio desktop.",
-      detail:
-        "Move your mouse for parallax depth, then click the glowing screen. You will dive into the OS interface.",
-      cta: "Click the screen to enter",
-      powering: "Powering on…"
-    },
+  intro: {
+    title: "Corbiat Florentin's Portfolio",
+    subtitle:
+      "Click on the monitor screen to access the portfolio desktop.",
+    detail:
+      "Get ready for a journey into the past of computing.",
+    cta: "Click on the screen to enter",
+    powering: "Starting up…"
+  },
 
     preview: {
       notFoundTitle: "404 — Page not found",
@@ -48,11 +49,11 @@ export const messages = {
 
   fr: {
     intro: {
-      title: "Poste de travail développeur",
+      title: "Portfollio de Corbiat Florentin",
       subtitle:
         "Cliquez sur l’écran du moniteur pour accéder au bureau portfolio.",
       detail:
-        "Bougez la souris pour le parallaxe, puis cliquez sur l’écran lumineux. Vous entrerez dans l’interface du bureau.",
+        "Préparez vous à une éxperience dans le passé de l'informatique.",
       cta: "Cliquez sur l’écran pour entrer",
       powering: "Démarrage…"
     },
