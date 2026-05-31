@@ -6,4 +6,5 @@ export type Project = {
   liveUrl: string;
   previewImageUrl?: string;
   githubUrl?: string;
+  stars?: number;
 };

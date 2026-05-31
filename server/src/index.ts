@@ -2,14 +2,18 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { getProjects } from "./routes/projects.js";
+import { getReadme } from "./routes/readme.js";
 import { postContact } from "./routes/contact.js";
 
 const app = express();
+const allowedOrigins = [
+  "https://portfollio-corbiat-florentin.vercel.app",
+  ...(process.env.NODE_ENV !== "production" ? ["http://localhost:5173"] : [])
+];
+
 app.use(
   cors({
-    origin: [
-      "https://portfollio-corbiat-florentin.vercel.app"
-    ],
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
     credentials: true
   })
@@ -21,6 +25,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.get("/api/projects", getProjects);
+app.get("/api/projects/:id/readme", getReadme);
 
 app.post("/api/contact", postContact);
 

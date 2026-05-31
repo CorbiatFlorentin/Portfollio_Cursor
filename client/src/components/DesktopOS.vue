@@ -32,6 +32,7 @@ const {
 } = useWindowManager();
 
 const projects = ref<Project[]>([]);
+const loading = ref(true);
 const err = ref<string | null>(null);
 
 const layerStyle = computed(() => ({
@@ -43,6 +44,8 @@ onMounted(async () => {
     projects.value = await fetchProjects();
   } catch (e) {
     err.value = e instanceof Error ? e.message : "Failed to load projects";
+  } finally {
+    loading.value = false;
   }
 });
 </script>
@@ -64,6 +67,16 @@ onMounted(async () => {
     </div>
 
     <section class="desktop" v-if="!err">
+      <!-- Skeletons pendant le chargement -->
+      <div
+        v-if="loading"
+        v-for="n in 4"
+        :key="`sk-${n}`"
+        class="folder-skeleton"
+        :style="`--delay:${(n - 1) * 120}ms`"
+        aria-hidden="true"
+      />
+
       <FolderIcon
         v-for="p in projects"
         :key="p.id"
@@ -208,6 +221,19 @@ onMounted(async () => {
   gap: 18px 22px;
 
   align-content: flex-start;
+}
+
+.folder-skeleton {
+  width: 92px;
+  height: 96px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  animation: skeleton-pulse 1.4s ease-in-out var(--delay, 0ms) infinite;
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 0.9; }
 }
 
 .error {
