@@ -3,6 +3,7 @@ import { onMounted, onUnmounted, ref } from "vue";
 import gsap from "gsap";
 import { useI18n } from "../composables/useI18n";
 import LocaleSwitcher from "./LocaleSwitcher.vue";
+import ClippyHelper from "./ClippyHelper.vue";
 
 const emit = defineEmits<{ (e: "done"): void }>();
 const { t } = useI18n();
@@ -10,7 +11,6 @@ const { t } = useI18n();
 const root = ref<HTMLElement | null>(null);
 const canvas = ref<HTMLCanvasElement | null>(null);
 const diving = ref(false);
-const calloutHidden = ref(false);
 const pointer = ref({ nx: 0, ny: 0 });
 
 let raf = 0;
@@ -766,24 +766,7 @@ onUnmounted(() => {
   <div class="wrap" ref="root">
     <canvas class="circuit-bg" ref="canvas"></canvas>
     <LocaleSwitcher />
-
-    <aside class="callout" v-if="!calloutHidden">
-      <button class="callout-close" @click="calloutHidden = true" aria-label="Fermer">✕</button>
-
-      <h1>{{ t.intro.title }}</h1>
-
-      <p class="sub">
-        {{ t.intro.subtitle }}
-      </p>
-
-      <p class="detail">
-        {{ t.intro.detail }}
-      </p>
-
-      <p class="cta">
-        {{ t.intro.cta }}
-      </p>
-    </aside>
+    <ClippyHelper />
 
     <div class="scene">
       <div class="stage">
