@@ -44,7 +44,15 @@ export const messages = {
       hint: "Type and press Enter"
     },
 
-    window: { close: "Close" }
+    window: { close: "Close" },
+
+    desktopHint: {
+      cvTitle:      "Hey there!",
+      cvBody:       "You can download my résumé by double-clicking the CV.pdf icon.",
+      cvCta:        "Click for one more tip",
+      contactTitle: "One more thing...",
+      contactBody:  "Contact.cmd opens a terminal to send me a message directly. Double-click to get started!",
+    }
   },
 
   fr: {
@@ -92,7 +100,15 @@ export const messages = {
       hint: "Tapez puis Entrée"
     },
 
-    window: { close: "Fermer" }
+    window: { close: "Fermer" },
+
+    desktopHint: {
+      cvTitle:      "Psst !",
+      cvBody:       "Tu peux télécharger mon CV en double-cliquant sur l'icône CV.pdf !",
+      cvCta:        "Clique pour la suite",
+      contactTitle: "Au fait...",
+      contactBody:  "Contact.cmd c'est ta console directe pour m'envoyer un message. Double-clique dessus pour démarrer !",
+    }
   }
 } as const;
 

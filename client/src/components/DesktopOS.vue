@@ -12,6 +12,7 @@ import PdfWindow from "./PdfWindow.vue";
 import ContactTerminalWindow from "./ContactTerminalWindow.vue";
 
 import LocaleSwitcher from "./LocaleSwitcher.vue";
+import DesktopClippy from "./DesktopClippy.vue";
 
 import { useParallax } from "../composables/useParallax";
 import { useWindowManager } from "../composables/useWindowManager";
@@ -34,6 +35,7 @@ const {
 const projects = ref<Project[]>([]);
 const loading = ref(true);
 const err = ref<string | null>(null);
+const showClippy = ref(false);
 
 const layerStyle = computed(() => ({
   transform: `translate3d(${tx.value}px, ${ty.value}px, 0)`
@@ -46,6 +48,7 @@ onMounted(async () => {
     err.value = e instanceof Error ? e.message : "Failed to load projects";
   } finally {
     loading.value = false;
+    if (!err.value) showClippy.value = true;
   }
 });
 </script>
@@ -84,9 +87,13 @@ onMounted(async () => {
         @open="openProject"
       />
 
-      <PdfIcon @open="openPdf" />
+      <div data-clippy-pdf>
+        <PdfIcon @open="openPdf" />
+      </div>
 
-      <CmdIcon @open="openContact" />
+      <div data-clippy-contact>
+        <CmdIcon @open="openContact" />
+      </div>
     </section>
 
     <section v-else class="error">
@@ -105,6 +112,8 @@ onMounted(async () => {
         </div>
       </div>
     </section>
+
+    <DesktopClippy v-if="showClippy" />
 
     <template v-for="w in windows" :key="w.id">
       <template v-if="w">
