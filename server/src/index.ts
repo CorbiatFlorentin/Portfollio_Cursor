@@ -4,6 +4,7 @@ import cors from "cors";
 import { getProjects } from "./routes/projects.js";
 import { getReadme } from "./routes/readme.js";
 import { postContact } from "./routes/contact.js";
+import { fetchGithubProjects } from "./services/github.js";
 
 const app = express();
 const allowedOrigins = [
@@ -32,4 +33,5 @@ app.post("/api/contact", postContact);
 const port = Number(process.env.PORT ?? 3001);
 app.listen(port, () => {
   console.log(`API listening on http://localhost:${port}`);
+  fetchGithubProjects().catch(() => {});
 });

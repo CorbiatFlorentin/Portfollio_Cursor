@@ -1,5 +1,8 @@
 import type { ProjectDto } from "../types.js";
 
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+let cache: { ts: number; data: ProjectDto[] } | null = null;
+
 type GhRepo = {
   id: number;
   name: string;
@@ -16,6 +19,8 @@ type GhRepo = {
 };
 
 export async function fetchGithubProjects(): Promise<ProjectDto[]> {
+  if (cache && Date.now() - cache.ts < CACHE_TTL) return cache.data;
+
   const username = process.env.GITHUB_USERNAME?.trim();
   if (!username) return [];
 
@@ -40,7 +45,7 @@ export async function fetchGithubProjects(): Promise<ProjectDto[]> {
 
   const allow = process.env.GITHUB_REPO_FILTER?.split(",").map((s) => s.trim()).filter(Boolean);
 
-  return repos
+  const data = repos
     .filter((r) => !r.private && !r.fork && !r.archived)
     .filter((r) => !allow?.length || allow.includes(r.name))
     .map((r) => ({
@@ -53,6 +58,9 @@ export async function fetchGithubProjects(): Promise<ProjectDto[]> {
       stars: r.stargazers_count,
       previewImageUrl: `https://opengraph.githubassets.com/1/${r.full_name}`
     }));
+
+  cache = { ts: Date.now(), data };
+  return data;
 }
 
 function formatTitle(name: string) {
