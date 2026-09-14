@@ -18,6 +18,9 @@ type GhRepo = {
   private: boolean;
 };
 
+// Repos publics qu'on ne veut pas montrer sur le portfolio (playground, scripts perso, etc.)
+const HIDDEN_REPOS = ["Vault_IA", "Playground", "TrainingPython"];
+
 export async function fetchGithubProjects(): Promise<ProjectDto[]> {
   if (cache && Date.now() - cache.ts < CACHE_TTL) return cache.data;
 
@@ -47,6 +50,7 @@ export async function fetchGithubProjects(): Promise<ProjectDto[]> {
 
   const data = repos
     .filter((r) => !r.private && !r.fork && !r.archived)
+    .filter((r) => !HIDDEN_REPOS.includes(r.name))
     .filter((r) => !allow?.length || allow.includes(r.name))
     .map((r) => ({
       id: `gh-${r.name}`,
