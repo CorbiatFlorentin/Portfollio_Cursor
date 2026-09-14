@@ -11,4 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping /api/health
-        run: curl -fsS --max-time 30 https://portfollio-cursor.onrender.com/api/health
+        # Render free tier peut mettre 50-60s à se réveiller (cold start) :
+        # max-time large + retry pour ne pas faire échouer le job sur le premier ping.
+        run: curl -fsS --max-time 90 --retry 2 --retry-delay 5 https://portfollio-cursor.onrender.com/api/health
