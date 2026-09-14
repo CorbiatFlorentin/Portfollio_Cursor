@@ -1,10 +1,19 @@
 import type { Request, Response } from "express";
+import { marked } from "marked";
+import { staticReadmes } from "../data/staticProjects.js";
 
 const TTL = 30 * 60 * 1000;
 const cache = new Map<string, { html: string; ts: number }>();
 
 export async function getReadme(req: Request, res: Response) {
   const { id } = req.params;
+
+  const staticMarkdown = staticReadmes[id];
+  if (staticMarkdown) {
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.send(await marked.parse(staticMarkdown));
+    return;
+  }
 
   if (!id.startsWith("gh-")) {
     res.status(404).json({ error: "No README available for this project" });
